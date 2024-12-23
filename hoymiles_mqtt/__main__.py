@@ -19,66 +19,10 @@ from hoymiles_wifi.dtu import DTU  # type: ignore
 from hoymiles_mqtt import logger
 
 
-async def main() -> None:
+
+
+async def process(args) -> None:
     """Execute the main function for the mqtt package."""
-
-    parser = argparse.ArgumentParser(description="Hoymiles DTU Monitoring")
-    parser.add_argument(
-        "--dtu-host",
-        type=str,
-        required=True,
-        help="IP address or hostname of the DTU"
-    )
-    parser.add_argument(
-        "--local_addr",
-        type=str,
-        required=False,
-        help="IP address of the interface to bind to",
-    )
-    parser.add_argument(
-        "--mqtt-host",
-        type=str,
-        default="localhost",
-        help="MQTT Host",
-    )
-    parser.add_argument(
-        "--mqtt-port",
-        type=int,
-        default=1883,
-        help="MQTT Port",
-    )
-    parser.add_argument(
-        "--mqtt-username",
-        required=False,
-        help="MQTT Login",
-    )
-    parser.add_argument(
-        "--mqtt-password",
-        required=False,
-        help="MQTT Password",
-    )
-    parser.add_argument(
-        "--mqtt-client-name",
-        default="hoymiles-mqtt",
-        help="MQTT Client name",
-    )
-    parser.add_argument(
-        "--discovery-prefix",
-        default="homeassistant",
-        help="Homeassistant discovery prefix",
-    )
-    parser.add_argument(
-        "--state-prefix",
-        required=False,
-        help="Homeassistant state prefix",
-    )
-    args = parser.parse_args()
-
-    if args.state_prefix is None:
-        args.state_prefix = args.mqtt_client_name
-
-    print(args)
-
     # client = Client(args.mqtt_client_name)
     # client.username_pw_set(args.mqtt_username, args.mqtt_password)
     # client.connect(args.mqtt_host, args.mqtt_port)
@@ -203,6 +147,75 @@ async def main() -> None:
 
         for i, pv_data in enumerate(real_data_new.pv_data):
             pvs[i].handle_real_data_new(pv_data)
+
+async def main() -> None:
+    """Execute the main function for the mqtt package."""
+
+    parser = argparse.ArgumentParser(description="Hoymiles DTU Monitoring")
+    parser.add_argument(
+        "--dtu-host",
+        type=str,
+        required=True,
+        help="IP address or hostname of the DTU"
+    )
+    parser.add_argument(
+        "--local_addr",
+        type=str,
+        required=False,
+        help="IP address of the interface to bind to",
+    )
+    parser.add_argument(
+        "--mqtt-host",
+        type=str,
+        default="localhost",
+        help="MQTT Host",
+    )
+    parser.add_argument(
+        "--mqtt-port",
+        type=int,
+        default=1883,
+        help="MQTT Port",
+    )
+    parser.add_argument(
+        "--mqtt-username",
+        required=False,
+        help="MQTT Login",
+    )
+    parser.add_argument(
+        "--mqtt-password",
+        required=False,
+        help="MQTT Password",
+    )
+    parser.add_argument(
+        "--mqtt-client-name",
+        default="hoymiles-mqtt",
+        help="MQTT Client name",
+    )
+    parser.add_argument(
+        "--discovery-prefix",
+        default="homeassistant",
+        help="Homeassistant discovery prefix",
+    )
+    parser.add_argument(
+        "--state-prefix",
+        required=False,
+        help="Homeassistant state prefix",
+    )
+    args = parser.parse_args()
+
+    if args.state_prefix is None:
+        args.state_prefix = args.mqtt_client_name
+
+    print(args)
+
+    while True:
+        try:
+            await process(args)
+        except Exception as err:
+            print(f"Unexpected {err=}, {type(err)=}")
+            delay = 35
+            print(f"Reload in {delay}...")
+            await asyncio.sleep(delay)
 
 
 def run_main() -> None:
