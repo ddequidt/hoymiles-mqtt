@@ -76,6 +76,36 @@ async def process(args) -> None:
 
     dtu_state_switch.on()
 
+    """ dtu_power """
+    dtu_power_info = SensorInfo(
+        device=dtu_device_info,
+        unique_id=f"{
+            dtu_device_info.identifiers}_power",
+        name=f"DTU power",
+        device_class="power",
+        unit_of_measurement="W",
+    )
+
+    dtu_power = Sensor(Settings(
+        mqtt=mqtt_settings,
+        entity=dtu_power_info,
+    ))
+
+    """ dtu_daily_energy """
+    dtu_daily_energy_info = SensorInfo(
+        device=dtu_device_info,
+        unique_id=f"{
+            dtu_device_info.identifiers}_daily_energy",
+        name=f"DTU Daily energy",
+        device_class="energy",
+        unit_of_measurement="Wh",
+    )
+
+    dtu_daily_energy = Sensor(Settings(
+        mqtt=mqtt_settings,
+        entity=dtu_daily_energy_info,
+    ))
+
     meters = []
 
     for i, meter_info in enumerate(info_data.mMeterInfo):
@@ -141,6 +171,12 @@ async def process(args) -> None:
 
         if not real_data_new:
             raise Exception("Unable to get response!")
+        
+        dtu_power.set_state(
+                real_data_new.dtu_power/10.0)
+        
+        dtu_daily_energy.set_state(
+                real_data_new.dtu_daily_energy)
 
         for i, meter_data in enumerate(real_data_new.meter_data):
             meters[i].handle_real_data_new(meter_data)
